@@ -1,10 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const bcrypt = require("bcrypt-nodejs");
+const cors = require('cors');
 
 
 const app = express();
 app.use(bodyParser.json())
-const PORT = 3000;
+app.use(cors());
+
+const PORT = 4000;
 const database = {
   nextUser: 125,
   users : [
@@ -34,7 +38,7 @@ app.get('/',(req, res) => {
 app.post('/signin', (req, res) => {
   if (req.body.email === database.users[0].email &&
       req.body.password === database.users[0].password){
-        res.json("SINGING IN")
+        res.json(database.users[0]);
       } else {
         res.status(400).json('error logging in')
       }
@@ -42,6 +46,9 @@ app.post('/signin', (req, res) => {
 
 app.post('/register', (req, res) => {
   const {email, name, password} = req.body;
+  bcrypt.hash(password, null, null, function(err, hash) {
+      console.log(hash);
+  });
   database.users.push({
     id: database.nextUser,
     name: name,
@@ -68,20 +75,21 @@ app.get('/profile/:userID', (req, res) => {
   }
 })
 
-app.post('/image', (req, res) => {
+app.put('/image', (req, res) => {
   const {id} = req.body;
   let found = false;
   database.users.forEach( (user)=>{
     if (user.id === id) {
       found = true;
       user.entries++;
-      return res.json(user);
+      return res.json(user.entries);
     }
   })
   if(!found){
     res.status(404).json("USER NOT FOUND")
   }
 })
+
 
 app.listen(PORT, ()=>{console.log(`SERVER IS RUNNING ON PORT ${PORT}`)});
 
